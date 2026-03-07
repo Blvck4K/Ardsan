@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Request Loan - Ardsan Co-op</title>
+    <link rel="icon" type="image/jpeg" href="Ardsan.jpeg" />
+
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="shared.js"></script>
+</head>
+
+<body>
+
+    <div class="app">
+        <!-- Header -->
+        <div class="header">
+            <h1 style="color: #fff;">Available Loans</h1>
+        </div>
+
+        <!-- Loan Options / Application Form -->
+        <div class="withdrawal-container" style="margin-top: 20px;">
+            <h2>Apply for a Loan</h2>
+            <form id="loanForm">
+                <label for="loanType">Select Loan Package</label>
+                <select id="loanType" required>
+                    <option value="">Choose a Package...</option>
+                    <option value="Emergency Loan|12|5">Emergency Loan (Max 3 Months, 0%)</option>
+                    <option value="Short Term Loan|6|7.5">Business Loan (Max 12 Months, 10%)</option>
+                </select>
+
+                <label for="loanAmount">Requested Amount (₦)</label>
+                <input type="number" id="loanAmount" placeholder="e.g. 50000" min="5000" required />
+
+                <label for="loanDuration">Duration (Months)</label>
+                <input type="number" id="loanDuration" placeholder="e.g. 6" min="1" max="12" required />
+
+                <label for="monthlyRepaymentAmount">Monthly Repayment Amount (₦)</label>
+                <input type="number" id="monthlyRepaymentAmount" placeholder="e.g. 10000" min="1000" required />
+
+                <label for="loanImage">Supporting Document (Image)</label>
+                <input type="file" id="loanImage" accept="image/*" required style="margin-bottom: 15px;" />
+
+                <button type="submit">Submit Application</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loanForm = document.getElementById('loanForm');
+            const loanTypeSelect = document.getElementById('loanType');
+            const durationInput = document.getElementById('loanDuration');
+
+            // Enforce max duration hints based on selection
+            loanTypeSelect.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if (val) {
+                    const parts = val.split('|');
+                    durationInput.max = parts[1];
+                    durationInput.placeholder = `Max ${parts[1]} months`;
+                }
+            });
+
+            loanForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const typeData = loanTypeSelect.value;
+                const amount = parseFloat(document.getElementById('loanAmount').value);
+                const duration = parseInt(durationInput.value);
+                const monthlyRepayment = parseFloat(document.getElementById('monthlyRepaymentAmount').value);
+
+                if (!typeData) return alert('Select a loan type.');
+                if (!amount || amount < 5000) return alert('Minimum loan is ₦5,000.');
+
+                const [loanName, maxDuration, interestRate] = typeData.split('|');
+
+                if (!duration || duration < 1 || duration > parseInt(maxDuration)) {
+                    return alert(`Duration must be between 1 and ${maxDuration} months.`);
+                }
+
+                const fileInput = document.getElementById('loanImage');
+                const file = fileInput.files[0];
+                if (!file) return alert('Please attach a supporting image document.');
+
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) return alert('You must be logged in to apply.');
+
+                const submitBtn = loanForm.querySelector('button');
+                submitBtn.textContent = 'Submitting...';
+                submitBtn.disabled = true;
+
+                try {
+                    // Upload the file to Storage Bucket
+                    submitBtn.textContent = 'Uploading Document...';
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${user.email.replace(/[^a-zA-Z0-9]/g, '_')}.${fileExt}`;
+                    const filePath = `documents/${fileName}`;
+
+                    const { error: uploadError } = await supabase.storage.from('loan-images').upload(filePath, file);
+                    if (uploadError) throw new Error("Document upload failed: " + uploadError.message);
+
+                    const { data: publicUrlData } = supabase.storage.from('loan-images').getPublicUrl(filePath);
+                    const evidenceUrl = publicUrlData.publicUrl;
+
+                    // Log it to Supabase Database
+                    submitBtn.textContent = 'Submitting Data...';
+                    const { error } = await supabase.from('loans').insert([{
+                        user_email: user.email,
+                        loan_type: loanName,
+                        amount: amount,
+                        duration_months: duration,
+                        interest_rate: parseFloat(interestRate),
+                        monthly_repayment_amount: monthlyRepayment,
+                        remaining_balance: amount, // initial remaining balance is the full amount (excluding interest logic if not pre-calculated)
+                        status: 'pending',
+                        evidence_url: evidenceUrl
+                    }]);
+                    if (error) throw error;
+
+                    alert(`Your application for a ₦${amount} ${loanName} has been submitted for review!`);
+                    window.location.href = 'index.html';
+
+                } catch (err) {
+                    alert('Error submitting loan: ' + err.message);
+                } finally {
+                    submitBtn.textContent = 'Submit Application';
+                    submitBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

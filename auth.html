@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ardsan Co-op Login">
+  <title>Login - Ardsan Co-op</title>
+  <link rel="icon" type="image/jpeg" href="Ardsan.jpeg">
+
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Supabase JS Client & Shared Logic -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+  <script src="shared.js"></script>
+</head>
+
+<body>
+
+  <div class="app" style="justify-content: center;">
+    <div class="auth-container">
+      <div class="auth-header" id="formTitle">Sign In</div>
+
+      <form class="auth-form" id="signInForm">
+        <div class="form-group">
+          <label for="signin-identifier">Username or Email</label>
+          <input type="text" id="signin-identifier" name="identifier" placeholder="Enter your username or email"
+            required>
+        </div>
+        <div class="form-group" style="position: relative;">
+          <label for="signin-password">Password</label>
+          <input type="password" id="signin-password" name="password" placeholder="Enter your password" required
+            style="padding-right: 40px;">
+          <i class="fa-solid fa-eye-slash toggle-password"
+            style="position: absolute; right: 15px; top: 46px; cursor: pointer; color: #666;"
+            data-target="signin-password"></i>
+        </div>
+        <button type="submit" class="auth-btn">Sign In</button>
+      </form>
+
+      <form class="auth-form" id="signUpForm" style="display:none;">
+        <div class="form-group">
+          <label for="signup-username">Username</label>
+          <input type="text" id="signup-username" name="username" placeholder="Choose a username" required>
+        </div>
+        <div class="form-group">
+          <label for="signup-email">Email</label>
+          <input type="email" id="signup-email" name="email" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label for="signup-phone">Phone Number</label>
+          <input type="tel" id="signup-phone" name="phone" placeholder="e.g. 08012345678" pattern="[+]*[0-9]{10,14}"
+            title="Please enter a valid phone number" required>
+        </div>
+        <div class="form-group">
+          <label for="signup-nok">Next of Kin</label>
+          <input type="text" id="signup-nok" name="nok" placeholder="Enter next of kin's full name" required>
+        </div>
+        <div class="form-group">
+          <label for="signup-address">Home Address</label>
+          <input type="text" id="signup-address" name="address" placeholder="Enter your full home address" required>
+        </div>
+        <div class="form-group">
+          <label for="signup-ippis">IPPIS Number</label>
+          <input type="text" id="signup-ippis" name="ippis" placeholder="e.g. 123456" pattern="\d{6}" maxlength="6"
+            minlength="6" title="Please enter exactly 6 digits" required>
+        </div>
+        <div class="form-group">
+          <label for="signup-memberid">Member ID</label>
+          <input type="text" id="signup-memberid" name="memberid" placeholder="e.g. 1234" pattern="\d{4}" maxlength="4"
+            minlength="4" title="Please enter exactly 4 digits" required>
+        </div>
+        <div class="form-group" style="position: relative;">
+          <label for="signup-password">Password</label>
+          <input type="password" id="signup-password" name="password" placeholder="Create a password" required
+            style="padding-right: 40px;">
+          <i class="fa-solid fa-eye-slash toggle-password"
+            style="position: absolute; right: 15px; top: 46px; cursor: pointer; color: #666;"
+            data-target="signup-password"></i>
+        </div>
+        <div class="form-group" style="position: relative;">
+          <label for="signup-confirm-password">Confirm Password</label>
+          <input type="password" id="signup-confirm-password" name="confirm-password"
+            placeholder="Confirm your password" required style="padding-right: 40px;">
+          <i class="fa-solid fa-eye-slash toggle-password"
+            style="position: absolute; right: 15px; top: 46px; cursor: pointer; color: #666;"
+            data-target="signup-confirm-password"></i>
+        </div>
+        <button type="submit" class="auth-btn">Sign Up</button>
+      </form>
+
+      <div class="auth-footer">
+        <span id="toggleText" style="color: var(--text-muted); font-size: 0.9rem;">Don't have an account?</span>
+        <a href="#" class="auth-link" id="toggleLink">Sign Up</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const signInForm = document.getElementById('signInForm');
+      const signUpForm = document.getElementById('signUpForm');
+      const toggleLink = document.getElementById('toggleLink');
+      const toggleText = document.getElementById('toggleText');
+      const formTitle = document.getElementById('formTitle');
+      let isSignIn = true;
+
+      toggleLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        isSignIn = !isSignIn;
+        if (isSignIn) {
+          signInForm.style.display = 'block';
+          signUpForm.style.display = 'none';
+          formTitle.textContent = 'Sign In';
+          toggleText.textContent = "Don't have an account?";
+          toggleLink.textContent = 'Sign Up';
+        } else {
+          signInForm.style.display = 'none';
+          signUpForm.style.display = 'block';
+          formTitle.textContent = 'Sign Up';
+          toggleText.textContent = 'Already have an account?';
+          toggleLink.textContent = 'Sign In';
+        }
+      });
+
+      // Password Visibility Toggle
+      document.querySelectorAll('.toggle-password').forEach(icon => {
+        icon.addEventListener('click', function () {
+          const inputId = this.getAttribute('data-target');
+          const input = document.getElementById(inputId);
+
+          if (input.type === 'password') {
+            input.type = 'text';
+            this.classList.remove('fa-eye-slash');
+            this.classList.add('fa-eye');
+            this.style.color = 'var(--primary)'; // Make it pop when visible
+          } else {
+            input.type = 'password';
+            this.classList.remove('fa-eye');
+            this.classList.add('fa-eye-slash');
+            this.style.color = '#666';
+          }
+        });
+      });
+
+      // Form Input Restrictions
+      const phoneInput = document.getElementById('signup-phone');
+      const ippisInput = document.getElementById('signup-ippis');
+      const memberIdInput = document.getElementById('signup-memberid');
+
+      // Only allow numbers to be typed into strictly numeric fields
+      const restrictToNumbers = (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+      };
+
+      if (ippisInput) ippisInput.addEventListener('input', restrictToNumbers);
+      if (memberIdInput) memberIdInput.addEventListener('input', restrictToNumbers);
+
+      // Allow numbers and an optional leading plus sign for phone
+      if (phoneInput) {
+        phoneInput.addEventListener('input', (e) => {
+          e.target.value = e.target.value.replace(/[^0-9+]/g, '');
+        });
+      }
+
+      // Supabase Sign In
+      signInForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const identifier = document.getElementById('signin-identifier').value;
+        const password = document.getElementById('signin-password').value;
+        const submitBtn = signInForm.querySelector('button');
+        submitBtn.textContent = 'Processing...';
+        submitBtn.disabled = true;
+
+        try {
+          let result;
+          if (identifier.includes('@')) {
+            result = await supabase.auth.signInWithPassword({ email: identifier, password });
+          } else {
+            const { data, error } = await supabase
+              .from('users')
+              .select('email')
+              .eq('username', identifier)
+              .single();
+            if (error || !data) {
+              alert('No user found with that username.');
+              return;
+            }
+            result = await supabase.auth.signInWithPassword({ email: data.email, password });
+          }
+          if (result.error) throw result.error;
+          window.location.href = 'index.html';
+        } catch (err) {
+          alert(err.message);
+        } finally {
+          submitBtn.textContent = 'Sign In';
+          submitBtn.disabled = false;
+        }
+      });
+
+      // Supabase Sign Up
+      signUpForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const username = document.getElementById('signup-username').value;
+        const email = document.getElementById('signup-email').value;
+
+        // KYC Fields
+        const phone = document.getElementById('signup-phone').value;
+        const nok = document.getElementById('signup-nok').value;
+        const address = document.getElementById('signup-address').value;
+        const ippis = document.getElementById('signup-ippis').value;
+        const memberid = document.getElementById('signup-memberid').value;
+
+        const password = document.getElementById('signup-password').value;
+        const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+        if (password !== confirmPassword) {
+          alert("Passwords do not match!");
+          return;
+        }
+
+        const submitBtn = signUpForm.querySelector('button');
+        submitBtn.textContent = 'Processing...';
+        submitBtn.disabled = true;
+
+        try {
+          // 1. Create the Auth account in Supabase
+          const { data, error } = await supabase.auth.signUp({ email, password });
+          if (error) throw error;
+
+          // 2. Use our secure bypass function to create the public profile record
+          const { error: dbError } = await supabase.rpc('create_new_user', {
+            user_email: email,
+            requested_username: username,
+            user_phone: phone,
+            user_nok: nok,
+            user_address: address,
+            user_ippis: ippis,
+            user_memberid: memberid
+          });
+          if (dbError) throw new Error("Failed to create user profile: " + dbError.message);
+
+          window.location.href = 'index.html';
+        } catch (err) {
+          alert("Sign up failed: " + err.message);
+        } finally {
+          submitBtn.textContent = 'Sign Up';
+          submitBtn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
