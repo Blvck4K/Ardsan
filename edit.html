@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>User Profile - Ardsan Co-op</title>
+    <link rel="icon" type="image/jpeg" href="Ardsan.jpeg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Edit User Profile" />
+
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="shared.js"></script>
+</head>
+
+<body>
+    <div class="app">
+        <!-- BACK BUTTON -->
+        <a href="index.html" class="back-btn" aria-label="Back to Home">
+            <i class="fa-solid fa-arrow-left"></i> Home
+        </a>
+
+        <!-- PROFILE CARD -->
+        <div class="profile-card">
+            <form id="profileForm" enctype="multipart/form-data">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="text-avatar xlarge" id="editProfilePic"></div>
+                    <img src="" alt="profile" id="profilePhoto" class="avatar"
+                        style="margin-bottom:15px; display: none; width: 120px; height: 120px;" />
+                    <input type="file" id="photoInput" accept="image/*" style="display:none;" />
+                </div>
+
+                <div class="profile-info">
+                    <label>Name</label>
+                    <input type="text" id="name" value="John Doe" disabled>
+
+                    <label>Date of Birth</label>
+                    <input type="date" id="dob" value="1995-05-10" disabled>
+
+                    <label>Phone Number</label>
+                    <input type="tel" id="phone" value="" disabled>
+
+                    <label>Next of Kin</label>
+                    <input type="text" id="nok" value="" disabled>
+
+                    <label>Home Address</label>
+                    <input type="text" id="address" value="" disabled>
+
+                    <label>IPPIS Number</label>
+                    <input type="text" id="ippis" value="" disabled>
+
+                    <label>Account Number</label>
+                    <input type="text" id="accountnumber" value="" disabled>
+
+                    <label>Member ID</label>
+                    <input type="text" id="memberid" value="" disabled>
+
+                    <label>Email</label>
+                    <input type="email" id="email" value="johndoe@email.com" disabled>
+                </div>
+
+                <button class="edit-btn" type="button" onclick="enableEdit()">Edit Profile</button>
+                <div style="display:flex; gap: 10px; margin-top:20px;">
+                    <button class="save-btn" type="button" onclick="saveProfile()"
+                        style="display:none; background:var(--primary);">Save Profile</button>
+                    <button class="save-btn" type="button" id="uploadBtn"
+                        style="display:none; background:var(--secondary);"
+                        onclick="document.getElementById('photoInput').click()">Change Photo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PROFILE LOGIC -->
+    <script>
+        function enableEdit() {
+            document.getElementById('name').disabled = false;
+            document.getElementById('dob').disabled = false;
+            document.getElementById('phone').disabled = false;
+            document.getElementById('nok').disabled = false;
+            document.getElementById('address').disabled = false;
+            document.getElementById('ippis').disabled = false;
+            document.getElementById('accountnumber').disabled = false;
+            document.getElementById('memberid').disabled = false;
+            document.getElementById('photoInput').style.display = 'none'; // hidden, button triggers it
+            document.getElementById('uploadBtn').style.display = 'block';
+            document.querySelector('.edit-btn').style.display = 'none';
+            document.querySelector('.save-btn').style.display = 'inline-block';
+        }
+
+        async function saveProfile() {
+            document.getElementById('name').disabled = true;
+            document.getElementById('dob').disabled = true;
+            document.getElementById('phone').disabled = true;
+            document.getElementById('nok').disabled = true;
+            document.getElementById('address').disabled = true;
+            document.getElementById('ippis').disabled = true;
+            document.getElementById('accountnumber').disabled = true;
+            document.getElementById('memberid').disabled = true;
+
+            document.getElementById('uploadBtn').style.display = 'none';
+            document.querySelector('.edit-btn').style.display = 'inline-block';
+            document.querySelector('.save-btn').style.display = 'none';
+
+            const email = document.getElementById('email').value || 'demo@email.com';
+            const newName = document.getElementById('name').value;
+            let photoUrl = localStorage.getItem('profilePhotoUrl');
+
+            const photoInput = document.getElementById('photoInput');
+            const file = photoInput.files[0];
+
+            if (file) {
+                const submitBtns = document.querySelectorAll('.save-btn');
+                submitBtns.forEach(btn => { btn.textContent = 'Saving...'; btn.disabled = true; });
+
+                const fileExt = file.name.split('.').pop();
+                const filePath = `profile-photos/${email.replace(/[^a-zA-Z0-9]/g, '_')}.${fileExt}`;
+
+                try {
+                    const { error } = await supabase.storage.from('profile-photos').upload(filePath, file, { upsert: true });
+                    if (error) throw error;
+
+                    const { data: publicUrlData } = supabase.storage.from('profile-photos').getPublicUrl(filePath);
+                    if (publicUrlData && publicUrlData.publicUrl) {
+                        photoUrl = publicUrlData.publicUrl;
+                        localStorage.setItem('profilePhotoUrl', photoUrl);
+                        updateProfilePhotos(); // from shared.js
+                    }
+                } catch (err) {
+                    alert('Upload failed: ' + err.message);
+                } finally {
+                    submitBtns.forEach(btn => { btn.textContent = 'Save Profile'; btn.disabled = false; });
+                }
+            }
+
+            // Save to DB (update username, KYC and photo)
+            const updatePayload = {
+                profile_photo: photoUrl,
+                username: newName,
+                phone: document.getElementById('phone').value,
+                next_of_kin: document.getElementById('nok').value,
+                address: document.getElementById('address').value,
+                ippis_number: document.getElementById('ippis').value,
+                account_number: document.getElementById('accountnumber').value,
+                member_id: document.getElementById('memberid').value
+            };
+
+            const { error: updateError } = await supabase
+                .from('users')
+                .update(updatePayload)
+                .eq('email', email);
+
+            if (updateError) {
+                console.error('Failed to update DB', updateError);
+                alert('Failed to save profile details.');
+            } else {
+                // Update local visual state immediately
+                if (newName && newName.trim().length > 0) {
+                    localStorage.setItem('userInitial', newName.trim().charAt(0).toUpperCase());
+                }
+                updateProfilePhotos();
+                alert('Profile updated successfully!');
+            }
+        }
+
+        // Preview selected image
+        document.getElementById('photoInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (evt) {
+                    document.getElementById('profilePhoto').src = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Populate Email if Supabase Session Exists
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (supabase) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    document.getElementById('email').value = user.email;
+
+                    // Fetch user details exactly as they appear in DB
+                    const { data } = await supabase.from('users').select('username, profile_photo, phone, next_of_kin, address, ippis_number, account_number, member_id').eq('email', user.email).single();
+                    if (data) {
+                        if (data.username) {
+                            document.getElementById('name').value = data.username;
+                            localStorage.setItem('userInitial', data.username.charAt(0).toUpperCase());
+                        } else {
+                            localStorage.setItem('userInitial', user.email.charAt(0).toUpperCase());
+                        }
+
+                        if (data.phone) document.getElementById('phone').value = data.phone;
+                        if (data.next_of_kin) document.getElementById('nok').value = data.next_of_kin;
+                        if (data.address) document.getElementById('address').value = data.address;
+                        if (data.ippis_number) document.getElementById('ippis').value = data.ippis_number;
+                        if (data.account_number) document.getElementById('accountnumber').value = data.account_number;
+                        if (data.member_id) document.getElementById('memberid').value = data.member_id;
+                    }
+                    updateProfilePhotos(); // Force refresh to fix any blank circles
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

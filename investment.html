@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Investment - Ardsan Co-op</title>
+    <link rel="icon" type="image/jpeg" href="Ardsan.jpeg" />
+
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="shared.js"></script>
+    <style>
+        .investment-header {
+            background: linear-gradient(135deg, #1f2b3e 0%, #17a2b8 100%);
+            padding: 30px 20px;
+            border-radius: 15px;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .investment-header h2 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .investment-header .amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .investment-header .currency {
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            text-decoration: none;
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-add {
+            background-color: #28a745;
+        }
+
+        .btn-history {
+            background-color: #007bff;
+        }
+
+        .info-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #efefef;
+            padding-bottom: 8px;
+        }
+
+        .info-card p {
+            color: #666;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .text-blue {
+            color: #007bff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app">
+        <!-- Header/Back -->
+        <a href="index.html" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Home
+        </a>
+
+        <div class="header" style="margin-bottom: 20px;">
+            <h1 style="color: #fff;"><i class="fa-solid fa-chart-pie"></i> My Investment</h1>
+        </div>
+
+        <div class="investment-header">
+            <h2>Total Investment Balance</h2>
+            <div class="amount">
+                <span class="currency">₦</span><span id="investment-balance">0.00</span>
+            </div>
+            <p style="font-size: 0.85rem; margin-top: 10px; opacity: 0.8;">Performance grows steadily</p>
+        </div>
+
+        <div class="action-buttons">
+            <a href="add-investment.html" class="action-btn btn-add">
+                <i class="fa-solid fa-plus"></i><br>Add Funds
+            </a>
+            <a href="statement.html" class="action-btn btn-history">
+                <i class="fa-solid fa-clock-rotate-left"></i><br>History
+            </a>
+        </div>
+
+        <div class="info-card">
+            <h3><i class="fa-solid fa-circle-info text-blue"></i> About Your Investment</h3>
+            <p>Your investments help fund larger cooperative projects and yield periodic dividends. Keep investing to
+                grow your portfolio and secure your future.</p>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load balance from localStorage, populated dynamically by shared.js showBalance() global fetch
+            const sharesVal = localStorage.getItem('userShares') || '0.00';
+            document.getElementById('investment-balance').textContent = sharesVal;
+        });
+    </script>
+</body>
+
+</html>

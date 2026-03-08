@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Dashboard - Ardsan Co-op</title>
+    <link rel="icon" type="image/jpeg" href="Ardsan.jpeg">
+
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="shared.js"></script>
+</head>
+
+<body>
+
+    <div class="app">
+        <!-- PROFILE SECTION -->
+        <div class="profile-section">
+            <div class="text-avatar large" id="menuProfilePic" style="margin: 0 auto;"></div>
+            <img src="" class="avatar" alt="profile" id="menuProfileImg" style="display: none; margin: 0 auto;">
+            <h2 id="userName" style="color: #fff;">Loading...</h2>
+            <p class="status">
+                <i class=></i>
+            </p>
+
+            <!-- BALANCE SECTION -->
+            <div class="balance-row">
+                <span id="balance-value">0.00</span>
+                <button id="eye-toggle" class="icon" type="button" aria-label="Toggle balance visibility"
+                    style="border:none;">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- MENU GRID -->
+        <div class="menu-grid">
+            <a href="request-loan.html" style="text-decoration: none;">
+                <div class="menu-card">
+                    <div class="icon pink"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                    <p>Get Loan</p>
+                </div>
+            </a>
+
+            <a href="mobile-pos.html" style="text-decoration: none;">
+                <div class="menu-card">
+                    <div class="icon green"><i class="fa-solid fa-money-bill-transfer"></i></div>
+                    <p>Make Deposit</p>
+                </div>
+            </a>
+
+            <a href="shop.html" style="text-decoration: none;">
+                <div class="menu-card">
+                    <div class="icon red"><i class="fa-solid fa-cart-shopping"></i></div>
+                    <p>Request Purchase</p>
+                </div>
+            </a>
+
+            <a href="withdrawal.html" style="text-decoration: none;">
+                <div class="menu-card">
+                    <div class="icon blue"><i class="fa-solid fa-money-bill-wave"></i></div>
+                    <p>Withdraw Cash</p>
+                </div>
+            </a>
+
+            <a href="statement.html" style="text-decoration: none;">
+                <div class="menu-card">
+                    <div class="icon purple"><i class="fa-solid fa-file-lines"></i></div>
+                    <p>Statement</p>
+                </div>
+            </a>
+
+            <a href="ippis.html" style="text-decoration: none;">
+                <div class="menu-card">
+                    <div class="icon" style="color: #17a2b8; background: rgba(23, 162, 184, 0.1);"><i
+                            class="fa-solid fa-file-invoice-dollar"></i></div>
+                    <p>IPPIS</p>
+                </div>
+            </a>
+
+            <a href="investment.html" style="text-decoration: none;">
+                <div class="menu-card">
+                    <div class="icon" style="color: #e83e8c; background: rgba(232, 62, 140, 0.1);"><i
+                            class="fa-solid fa-chart-pie"></i></div>
+                    <p>My Investment</p>
+                </div>
+            </a>
+
+            <a href="contribution.html" style="text-decoration: none;">
+                <div class="menu-card">
+                    <div class="icon" style="color: #6f42c1; background: rgba(111, 66, 193, 0.1);"><i
+                            class="fa-solid fa-users"></i></div>
+                    <p>My Contribution</p>
+                </div>
+            </a>
+
+            <a href="refund.html" style="text-decoration: none;">
+                <div class="menu-card">
+                    <div class="icon" style="color: #fd7e14; background: rgba(253, 126, 20, 0.1);"><i
+                            class="fa-solid fa-arrow-rotate-left"></i></div>
+                    <p>Request Refund</p>
+                </div>
+            </a>
+
+            <a href="admin.html" id="admin-panel-link" style="text-decoration: none; display: none;">
+                <div class="menu-card" style="border: 2px solid #FFD700;">
+                    <div class="icon" style="color: #FFD700; background: rgba(255, 215, 0, 0.1);"><i
+                            class="fa-solid fa-user-shield"></i></div>
+                    <p style="color: #FFD700; font-weight: bold;">Admin Panel</p>
+                </div>
+            </a>
+
+            <a href="#" id="logout-btn" style="text-decoration: none;">
+                <div class="menu-card">
+                    <div class="icon power"><i class="fa-solid fa-power-off"></i></div>
+                    <p>Log Out</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

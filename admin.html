@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Ardsan Co-op</title>
+    <link rel="icon" type="image/jpeg" href="Ardsan.jpeg">
+
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="shared.js"></script>
+    <script src="admin.js" defer></script>
+
+    <style>
+        .admin-section {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .admin-section h2 {
+            color: #0b1c06;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .data-table th,
+        .data-table td {
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            background-color: #f7f9f6;
+            color: #4a5c43;
+            font-weight: 600;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: none;
+            font-size: 0.8em;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .btn-approve {
+            background-color: #2e7d32;
+        }
+
+        .btn-reject {
+            background-color: #d32f2f;
+        }
+
+        .btn-ban {
+            background-color: #c62828;
+        }
+
+        .btn-deactivate {
+            background-color: #fb8c00;
+        }
+
+        .btn-restore {
+            background-color: #1976d2;
+        }
+
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .status-active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-banned {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status-deactivated {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .status-pending {
+            background: #fff8e1;
+            color: #f57f17;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+            font-style: italic;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .btn-add {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .item-image-preview {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app">
+        <!-- Header/Back -->
+        <a href="index.html" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Home
+        </a>
+
+        <div class="header" style="margin-bottom: 20px;">
+            <h1 style="color: #fff;"><i class="fa-solid fa-user-shield"></i> Admin Portal</h1>
+        </div>
+
+        <!-- System Users Panel -->
+        <div class="admin-section">
+            <h2>System Users</h2>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User Email</th>
+                            <th>Identity & Contact</th>
+                            <th>Next of Kin & Address</th>
+                            <th>Bal | Sav | Inv | Cont</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr>
+                            <td colspan="6" class="empty-state">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bulk Contributions Management Panel -->
+        <div class="admin-section">
+            <h2>Bulk Contributions Management</h2>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User Name & Email</th>
+                            <th>Current Contribution Balance (₦)</th>
+                            <th>Add/Deduct Amount (₦)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contributionsTableBody">
+                        <tr>
+                            <td colspan="4" class="empty-state">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bulk Savings Management Panel -->
+        <div class="admin-section">
+            <h2>Bulk Savings Management</h2>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User Name & Email</th>
+                            <th>Current Savings Balance (₦)</th>
+                            <th>Add/Deduct Amount (₦)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="savingsTableBody">
+                        <tr>
+                            <td colspan="4" class="empty-state">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Deposit Requests Panel -->
+        <div class="admin-section">
+            <h2>Deposit Requests</h2>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User Email</th>
+                            <th>Type / Amount (₦)</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="depositRequestsTableBody">
+                        <tr>
+                            <td colspan="5" class="empty-state">Loading deposit requests...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pending Loans Panel -->
+        <div class="admin-section">
+            <h2>Pending Loans</h2>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Applicant</th>
+                            <th>Type / Amount</th>
+                            <th>Terms</th>
+                            <th>Evidence</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="loansTableBody">
+                        <tr>
+                            <td colspan="4" class="empty-state">Loading loans...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Active Loans Panel -->
+        <div class="admin-section">
+            <h2>Active Loans <button class="btn-add" onclick="processMonthlyLoans()"><i class="fa-solid fa-sync"></i>
+                    Process Monthly Deductions</button></h2>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Applicant</th>
+                            <th>Type / Amount</th>
+                            <th>Terms</th>
+                            <th>Evidence</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activeLoansTableBody">
+                        <tr>
+                            <td colspan="4" class="empty-state">Loading active loans...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Shop Management Panel -->
+        <div class="admin-section">
+            <h2>Shop Management <button class="btn-add" onclick="openShopModal()"><i class="fa-solid fa-plus"></i> Add
+                    Item</button></h2>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Price (₦)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shopItemsTableBody">
+                        <tr>
+                            <td colspan="4" class="empty-state">Loading shop items...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- IPPIS Records Panel -->
+        <div class="admin-section">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; flex-wrap: wrap;">
+                <h2 style="margin: 0;">IPPIS Records</h2>
+                <button id="exportIppisBtnAdmin"
+                    style="padding: 8px 15px; background-color: #28a745; color: white; border-radius: 8px; font-weight: bold; border: none; cursor: pointer;">
+                    Export IPPIS CSV
+                </button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Staff Name</th>
+                            <th>IPPIS Number</th>
+                            <th>GL</th>
+                            <th>Net Salary</th>
+                            <th>Pay Month</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ippisRecordsTableBodyAdmin">
+                        <tr>
+                            <td colspan="5" class="empty-state">Loading records...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Refund Requests Panel -->
+        <div class="admin-section">
+            <h2>Refund Requests</h2>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Applicant</th>
+                            <th>Message</th>
+                            <th>Evidence / Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="refundsTableBody">
+                        <tr>
+                            <td colspan="4" class="empty-state">Loading refunds...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shop Item Modal -->
+    <div class="modal-overlay" id="shopModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Item</h3>
+                <button class="modal-close" onclick="closeShopModal()">&times;</button>
+            </div>
+            <form id="shopForm">
+                <input type="hidden" id="itemId">
+                <div class="form-group">
+                    <label>Item Name</label>
+                    <input type="text" id="itemName" required>
+                </div>
+                <div class="form-group">
+                    <label>Price (₦)</label>
+                    <input type="number" id="itemPrice" min="0" step="any" required>
+                </div>
+                <div class="form-group">
+                    <label>Item Image (Optional)</label>
+                    <input type="file" id="itemImage" accept="image/*">
+                    <img id="imagePreview" src="" alt="Preview"
+                        style="display:none; margin-top:10px; width:100px; border-radius:8px;">
+                </div>
+                <button type="submit" class="btn-primary" id="saveShopBtn">Save Item</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Edit Modal -->
+    <div class="modal-overlay" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit User</h3>
+                <button class="modal-close" onclick="closeUserModal()">&times;</button>
+            </div>
+            <form id="userForm">
+                <input type="hidden" id="editUserEmail">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="editUserUsername">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" id="editUserPhone">
+                    </div>
+                    <div class="form-group">
+                        <label>Next of Kin</label>
+                        <input type="text" id="editUserNOK">
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" id="editUserAddress">
+                    </div>
+                    <div class="form-group">
+                        <label>IPPIS Number</label>
+                        <input type="text" id="editUserIppis">
+                    </div>
+                    <div class="form-group">
+                        <label>Account Number</label>
+                        <input type="text" id="editUserAccountNumber">
+                    </div>
+                    <div class="form-group">
+                        <label>Member ID</label>
+                        <input type="text" id="editUserMemberId">
+                    </div>
+                    <div class="form-group">
+                        <label>Admin Privileges</label>
+                        <select id="editUserIsAdmin"
+                            style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                            <option value="false">No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <div class="form-group" style="flex:1;">
+                        <label>Balance (₦)</label>
+                        <input type="number" id="editUserBalance" step="0.01">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Savings (₦)</label>
+                        <input type="number" id="editUserSavings" step="0.01">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Shares/Inv (₦)</label>
+                        <input type="number" id="editUserShares" step="0.01">
+                    </div>
+                    <div class="form-group" style="flex:1;">
+                        <label>Contributions (₦)</label>
+                        <input type="number" id="editUserContributions" step="0.01">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="editUserStatus"
+                        style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                        <option value="active">Active</option>
+                        <option value="deactivated">Deactivated</option>
+                        <option value="banned">Banned</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary" id="saveUserBtn">Save User Data</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>

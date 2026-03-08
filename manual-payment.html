@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manual Payment - Ardsan Co-op</title>
+    <link rel="icon" type="image/jpeg" href="Ardsan.jpeg" />
+
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="shared.js"></script>
+</head>
+
+<body>
+
+    <div class="app">
+        <!-- Header/Back -->
+        <a href="javascript:history.back()" class="back-btn" id="backBtn">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+
+        <!-- Payment Details Section -->
+        <div class="payment-container" style="margin-top: 20px;">
+            <h2><i class="fa-solid fa-building-columns" style="color: #28a745;"></i> Bank Transfer</h2>
+            <p style="color: #666; font-size: 0.9em; margin-bottom: 20px;">Please transfer the exact amount to the
+                account details below.</p>
+
+            <div
+                style="background: rgba(0,0,0,0.02); border: 1px solid #eee; border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: left;">
+                <p style="margin-bottom: 10px;"><strong>Amount to Pay:</strong> <span id="displayAmount"
+                        style="color: #28a745; font-weight: bold; font-size: 1.2em;">₦0.00</span></p>
+                <hr style="border-top: 1px solid #eee; border-bottom: none; margin: 10px 0;">
+                <p style="margin-bottom: 5px;"><strong>Bank Name:</strong> tajbank</p>
+                <p style="margin-bottom: 5px;"><strong>Account Name:</strong> Ardsan star multi purpose cooperative
+                    society limited.</p>
+                <p style="margin-bottom: 0;"><strong>Account Number:</strong> <span
+                        style="font-size: 1.2em; font-weight: bold; letter-spacing: 1px;">0003748520</span></p>
+            </div>
+
+            <button id="confirmTransferBtn"
+                style="background-color: #28a745; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; border: none; color: white; cursor: pointer;">
+                I have made the transfer
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const typeParam = urlParams.get('type');
+            const amountParam = parseFloat(urlParams.get('amount'));
+
+            if (!['deposit', 'contribution', 'investment'].includes(typeParam) || isNaN(amountParam) || amountParam <= 0) {
+                alert("Invalid payment parameters.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('displayAmount').textContent = '₦' + amountParam.toLocaleString('en-US', { minimumFractionDigits: 2 });
+
+            const backBtn = document.getElementById('backBtn');
+            if (typeParam === 'contribution') backBtn.href = 'contribution.html';
+            else if (typeParam === 'investment') backBtn.href = 'investment.html';
+            else backBtn.href = 'index.html';
+
+            const confirmBtn = document.getElementById('confirmTransferBtn');
+
+            confirmBtn.addEventListener('click', async () => {
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = 'Processing...';
+
+                try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) {
+                        alert("You must be logged in.");
+                        window.location.href = 'auth.html';
+                        return;
+                    }
+
+                    const record = {
+                        user_email: user.email,
+                        type: typeParam,
+                        amount: amountParam,
+                        status: 'pending'
+                    };
+
+                    const { error } = await supabase
+                        .from('deposit_requests')
+                        .insert([record]);
+
+                    if (error) throw error;
+
+                    alert("Transfer details sent successfully. Please wait for the admin to confirm your transfer.");
+                    window.location.href = backBtn.href;
+
+                } catch (err) {
+                    console.error("Error submitting transfer:", err);
+                    if (err.code === '42P01') {
+                        alert("The deposit requests database table does not exist. Please contact admin.");
+                    } else {
+                        alert("Error: " + err.message);
+                    }
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = 'I have made the transfer';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

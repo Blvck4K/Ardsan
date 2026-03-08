@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Refund - Ardsan Co-op</title>
+    <link rel="icon" type="image/jpeg" href="Ardsan.jpeg">
+
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Supabase JS Client & Shared Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="shared.js"></script>
+    <script src="refund.js" defer></script>
+</head>
+
+<body>
+
+    <div class="app">
+        <!-- HEADER / BACK BUTTON -->
+        <a href="menu.html" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Back to Menu
+        </a>
+
+        <div class="header" style="margin-bottom: 20px;">
+            <h1 style="color: #fff;"><i class="fa-solid fa-arrow-rotate-left"></i> Request Refund</h1>
+            <p style="color: #eee; font-size: 0.9em;">Upload an image and provide details for your refund request.</p>
+        </div>
+
+        <div class="form-container">
+            <form id="refund-form">
+
+                <div class="input-group">
+                    <label for="refund-message">Reason for Refund <span style="color:red">*</span></label>
+                    <textarea id="refund-message" rows="4"
+                        style="width: 100%; border-radius: 8px; border: 1px solid #ddd; padding: 10px; font-family: inherit; font-size: 16px;"
+                        placeholder="Please explain why you are requesting a refund..." required></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label for="refund-image">Upload Evidence (Image) <span style="color:red">*</span></label>
+                    <input type="file" id="refund-image" accept="image/*" required
+                        style="width: 100%; border-radius: 8px; border: 1px solid #ddd; padding: 10px; font-family: inherit; background: #fff; font-size: 14px;">
+                    <br>
+                    <img id="refund-image-preview" src="" alt="Preview"
+                        style="display:none; margin-top:10px; width:100%; max-height: 200px; object-fit: contain; border-radius:8px; border: 1px solid #eee;">
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-refund-btn"
+                    style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                    Submit Request <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+
+            <div id="refund-status" style="margin-top: 15px; font-weight: bold; text-align: center;"></div>
+        </div>
+    </div>
+
+</body>
+
+</html>

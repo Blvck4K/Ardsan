@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shop - Ardsan Co-op</title>
+    <link rel="icon" type="image/jpeg" href="Ardsan.jpeg" />
+
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="shared.js"></script>
+</head>
+
+<body>
+
+    <div class="app">
+        <!-- Back Button -->
+        <a href="javascript:history.back()" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+
+        <!-- Header -->
+        <header class="header shop-header">
+            <h1>My Shop</h1>
+            <p>Quality products, simple prices</p>
+        </header>
+
+        <!-- Products -->
+        <section class="products" id="productsContainer">
+            <div style="text-align: center; width: 100%; grid-column: 1 / -1; padding: 20px;">
+                Loading shop items...
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const formatNg = (val) => Number(val || 0).toLocaleString('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadShopItems();
+        });
+
+        async function loadShopItems() {
+            const container = document.getElementById('productsContainer');
+
+            try {
+                const { data: items, error } = await supabase
+                    .from('shop_items')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!items || items.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; width: 100%; grid-column: 1 / -1; padding: 20px; color: #777;">No products available at the moment.</div>';
+                    return;
+                }
+
+                let html = '';
+                items.forEach(item => {
+                    const imgHtml = item.image_url
+                        ? `<img src="${item.image_url}" alt="${item.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`
+                        : `<div style="width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center; color: #aaa;"><i class="fa-solid fa-image fa-2x"></i></div>`;
+
+                    html += `
+                        <div class="product-card">
+                            <div class="product-img" style="padding: 0; overflow: hidden; height: 150px;">
+                                ${imgHtml}
+                            </div>
+                            <h3>${item.name}</h3>
+                            <p class="price">${formatNg(item.price)}</p>
+                            <button onclick="buyItem('${item.id}', '${item.name.replace(/'/g, "\\'")}', ${item.price}, this)">Buy Now</button>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+
+            } catch (err) {
+                container.innerHTML = `<div style="text-align: center; width: 100%; grid-column: 1 / -1; padding: 20px; color: red;">Failed to load items: ${err.message}</div>`;
+            }
+        }
+
+        async function buyItem(itemId, itemName, amount, btnElement) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return alert('You must be logged in to shop.');
+
+            const confirmBuy = confirm(`Are you sure you want to buy ${itemName} for ₦${amount}?`);
+            if (!confirmBuy) return;
+
+            const originalText = btnElement.textContent;
+            btnElement.textContent = 'Processing...';
+            btnElement.disabled = true;
+
+            try {
+                // Check balance
+                const { data: userData, error: userErr } = await supabase
+                    .from('users')
+                    .select('balance')
+                    .eq('email', user.email)
+                    .single();
+
+                if (userErr) throw userErr;
+                if (userData.balance < amount) {
+                    throw new Error("Insufficient Balance for this purchase.");
+                }
+
+                // Deduct
+                const { error: rpcError } = await supabase.rpc('deduct_funds', {
+                    user_email_param: user.email,
+                    amount_param: amount
+                });
+                if (rpcError) throw rpcError;
+
+                // Log Purchase
+                const { error: pError } = await supabase.from('purchases').insert([{
+                    user_email: user.email,
+                    item_name: itemName,
+                    amount: amount,
+                    status: 'completed'
+                }]);
+                if (pError) throw pError;
+
+                // Log Transaction
+                await supabase.from('transactions').insert([{
+                    user_email: user.email,
+                    type: 'purchase',
+                    amount: amount,
+                    reference: 'SHP_' + Math.floor(Math.random() * 1000000000),
+                    status: 'completed'
+                }]);
+
+                alert(`Successfully purchased ${itemName} for ₦${amount}!`);
+
+                // Update local balance view immediately if on a page that shows it (unlikely here but good practice)
+                if (window.showBalance) window.showBalance();
+
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                btnElement.textContent = originalText;
+                btnElement.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>

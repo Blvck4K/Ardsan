@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Savings - Ardsan Co-op</title>
+    <link rel="icon" type="image/jpeg" href="Ardsan.jpeg">
+
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="shared.js"></script>
+
+    <style>
+        .savings-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .balance-display {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .balance-display h2 {
+            color: #4a5c43;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .balance-display .amount {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1.1em;
+        }
+
+        .btn-deposit {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px;
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            display: block;
+            margin-bottom: 25px;
+            text-decoration: none;
+        }
+
+        /* Toggle Switch CSS */
+        .auto-save-section {
+            background: #f8f9f7;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e0e6dd;
+        }
+
+        .toggle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .toggle-header h3 {
+            margin: 0;
+            color: #0b1c06;
+            font-size: 1.2em;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #2e7d32;
+        }
+
+        input:focus+.slider {
+            box-shadow: 0 0 1px #2e7d32;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(22px);
+        }
+
+        .auto-save-config {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .auto-save-config.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app">
+        <!-- Header -->
+        <a href="index.html" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Home
+        </a>
+        <div class="header" style="margin-bottom: 20px;">
+            <h1 style="color: #fff;"><i class="fa-solid fa-building-columns"></i> Savings</h1>
+        </div>
+
+        <div class="savings-container">
+            <div class="balance-display">
+                <h2>Total Savings Balance</h2>
+                <div class="amount" id="savings-balance-display">₦0.00</div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
+
+            <!-- Manual Savings -->
+            <h3>Manual Deposit to Savings</h3>
+            <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">Enter the amount you wish to save manually.
+                You will be redirected to the secure bank transfer portal.</p>
+            <form id="manualSavingsForm">
+                <div class="input-group">
+                    <label for="manualAmount">Amount (₦)</label>
+                    <input type="number" id="manualAmount" placeholder="e.g 5000" min="100" required>
+                </div>
+                <button type="submit" class="btn-deposit">Proceed to Transfer <i
+                        class="fa-solid fa-arrow-right"></i></button>
+            </form>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+            <!-- Auto-Save System -->
+            <div class="auto-save-section">
+                <div class="toggle-header">
+                    <div>
+                        <h3>Auto-Save <i class="fa-solid fa-bolt" style="color: #fbc02d;"></i></h3>
+                        <small style="color: #555;">Automatically save a dedicated amount.</small>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="autoSaveToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="auto-save-config" id="autoSaveConfigDiv">
+                    <div class="input-group">
+                        <label for="autoSaveAmount">Amount to Auto-Save (₦)</label>
+                        <input type="number" id="autoSaveAmount" placeholder="e.g 2000" min="100">
+                    </div>
+                    <button type="button" class="btn-deposit" id="saveAutoSaveBtn" style="padding: 10px;">Apply
+                        Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Savings Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await ensureAuthenticated();
+            const userEmail = localStorage.getItem('userEmail');
+
+            try {
+                // Fetch User's Savings stats
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('savings, auto_save_enabled, auto_save_amount')
+                    .eq('email', userEmail)
+                    .single();
+
+                if (error) throw error;
+
+                // Sync Display Balance
+                const sv = parseFloat(data.savings || 0);
+                document.getElementById('savings-balance-display').textContent = '₦' + formatNg(sv);
+
+                // Sync Toggle State
+                const toggle = document.getElementById('autoSaveToggle');
+                const configDiv = document.getElementById('autoSaveConfigDiv');
+                const amtInput = document.getElementById('autoSaveAmount');
+
+                toggle.checked = data.auto_save_enabled || false;
+                amtInput.value = data.auto_save_amount || '';
+
+                if (toggle.checked) {
+                    configDiv.classList.add('active');
+                }
+
+                // Listen to Toggle Changes
+                toggle.addEventListener('change', async (e) => {
+                    const isChecked = e.target.checked;
+                    if (isChecked) {
+                        configDiv.classList.add('active');
+                    } else {
+                        configDiv.classList.remove('active');
+                        // Immediately Sync to false if turned off
+                        const { error: offError } = await supabase
+                            .from('users')
+                            .update({ auto_save_enabled: false })
+                            .eq('email', userEmail);
+
+                        if (offError) console.error("Error disabling auto save", offError);
+                        else alert("Auto-Save successfully disabled.");
+                    }
+                });
+
+                // Save Auto Save Configuration
+                document.getElementById('saveAutoSaveBtn').addEventListener('click', async () => {
+                    const amt = parseFloat(amtInput.value);
+                    if (isNaN(amt) || amt < 0) {
+                        alert("Please enter a valid amount.");
+                        return;
+                    }
+
+                    const { error: saveError } = await supabase
+                        .from('users')
+                        .update({
+                            auto_save_enabled: true,
+                            auto_save_amount: amt
+                        })
+                        .eq('email', userEmail);
+
+                    if (saveError) {
+                        alert("Error saving preferences.");
+                        console.error(saveError);
+                    } else {
+                        alert(`Auto-Save successfully enabled for ₦${amt.toLocaleString()}.`);
+                    }
+                });
+
+                // Manual Payment Flow routing
+                document.getElementById('manualSavingsForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const amt = parseFloat(document.getElementById('manualAmount').value);
+                    if (amt > 0) {
+                        window.location.href = `manual-payment.html?type=savings&amount=${amt}`;
+                    }
+                });
+
+            } catch (err) {
+                console.error("Error setting up savings:", err);
+                alert("Could not load savings data.");
+            }
+        });
+    </script>
+
+</body>
+
+</html>

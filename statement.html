@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Statement - Ardsan Co-op</title>
+    <link rel="icon" type="image/jpeg" href="Ardsan.jpeg" />
+
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+    <script src="shared.js"></script>
+    <style>
+        .filter-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 0 15px;
+        }
+
+        .filter-container input,
+        .filter-container select {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            background: #fff;
+            flex: 1;
+            font-family: inherit;
+        }
+
+        .statement-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .statement-table th,
+        .statement-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            /* Adjusted for light mode */
+            font-size: 0.9rem;
+        }
+
+        .statement-table th {
+            background-color: #f8f9fa;
+            color: #666;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        .statement-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .type-deposit,
+        .type-investment,
+        .type-contribution {
+            color: #28a745;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .type-withdrawal,
+        .type-purchase {
+            color: #dc3545;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .type-loan {
+            color: #fd7e14;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        /* Responsive Table */
+        @media screen and (max-width: 600px) {
+            .filter-container {
+                flex-direction: column;
+            }
+
+            .statement-table th:nth-child(2),
+            .statement-table td:nth-child(2) {
+                display: none;
+                /* Hide 'Type' column on very small screens, merge into name */
+            }
+
+            .tx-type-label {
+                display: block;
+                font-size: 0.75rem;
+                font-weight: normal;
+                color: #888;
+            }
+        }
+
+        @media screen and (min-width: 601px) {
+            .tx-type-label {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app">
+        <!-- Back Button -->
+        <a href="javascript:history.back()" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+
+        <!-- Header -->
+        <header class="header">
+            <h1 style="color:#fff;">Account Statement</h1>
+            <p>Your complete transaction history</p>
+        </header>
+
+        <!-- Filters -->
+        <div class="filter-container">
+            <input type="text" id="searchInput" placeholder="Search reference or amount...">
+            <select id="typeFilter">
+                <option value="all">All Transactions</option>
+                <option value="deposit">Deposits</option>
+                <option value="withdrawal">Withdrawals</option>
+                <option value="investment">Investments</option>
+                <option value="contribution">Contributions</option>
+                <option value="loan">Loans</option>
+                <option value="purchase">Purchases</option>
+            </select>
+        </div>
+
+        <div style="padding: 0 15px; margin-bottom: 30px;">
+            <table class="statement-table">
+                <thead>
+                    <tr>
+                        <th>Details</th>
+                        <th>Type</th>
+                        <th style="text-align: right;">Amount (₦)</th>
+                    </tr>
+                </thead>
+                <tbody id="statementBody">
+                    <tr>
+                        <td colspan="3" class="empty-state">
+                            <i class="fa-solid fa-spinner fa-spin"
+                                style="font-size: 2rem; margin-bottom: 10px;"></i><br>
+                            Loading statements...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let allTransactions = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const tbody = document.getElementById('statementBody');
+            const searchInput = document.getElementById('searchInput');
+            const typeFilter = document.getElementById('typeFilter');
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Please log in to view statements.</td></tr>';
+                return;
+            }
+
+            try {
+                // Fetch unified transactions table
+                // Note: The transactions table natively handles deposits, withdrawals, investments, contributions via RPC logs.
+                // It also should handle purchases if they were logged there.
+                const { data, error } = await supabase
+                    .from('transactions')
+                    .select('*')
+                    .eq('user_email', user.email)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                allTransactions = data || [];
+
+                // Automatically also pull from 'loans' and 'purchases' if they aren't consolidated in 'transactions' table yet
+                // To ensure nothing is missed in the unified view
+                const { data: loansData } = await supabase.from('loans').select('*').eq('user_email', user.email);
+                if (loansData) {
+                    loansData.forEach(loan => {
+                        allTransactions.push({
+                            id: loan.id,
+                            type: 'loan',
+                            amount: loan.amount,
+                            created_at: loan.created_at,
+                            reference: `LOAN_${loan.loan_type.toUpperCase()}`,
+                            status: loan.status
+                        });
+                    });
+                }
+
+                const { data: purchasesData } = await supabase.from('purchases').select('*').eq('user_email', user.email);
+                if (purchasesData) {
+                    purchasesData.forEach(purchase => {
+                        allTransactions.push({
+                            id: purchase.id,
+                            type: 'purchase',
+                            amount: purchase.amount,
+                            created_at: purchase.created_at,
+                            reference: `PURC_${purchase.item_name.substring(0, 5).toUpperCase()}`,
+                            status: purchase.status
+                        });
+                    });
+                }
+
+                // Sort the massive combined array
+                allTransactions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                renderTable();
+
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="3" class="empty-state" style="color:red;">Error loading statement: ${err.message}</td></tr>`;
+            }
+
+            // Event Listeners for search/filter
+            searchInput.addEventListener('input', renderTable);
+            typeFilter.addEventListener('change', renderTable);
+        });
+
+        function renderTable() {
+            const tbody = document.getElementById('statementBody');
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const typeQ = document.getElementById('typeFilter').value.toLowerCase();
+
+            // Filter logic
+            const filtered = allTransactions.filter(tx => {
+                const matchesSearch =
+                    (tx.reference && tx.reference.toLowerCase().includes(query)) ||
+                    (tx.amount.toString().includes(query));
+
+                const matchesType = typeQ === 'all' || tx.type.toLowerCase() === typeQ;
+
+                return matchesSearch && matchesType;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-state"><i class="fa-solid fa-box-open" style="font-size: 2rem; color: #ccc; margin-bottom: 10px;"></i><br>No matching records.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            filtered.forEach(tx => {
+                const dateObj = new Date(tx.created_at);
+                const dateHtml = `<div style="font-weight: 500;">${dateObj.toLocaleDateString('en-GB')}</div><div style="font-size: 0.75rem; color: #888;">${tx.reference || tx.id.substring(0, 8)}</div>`;
+
+                const typeClass = 'type-' + tx.type.toLowerCase();
+                const amountFormatted = Number(tx.amount).toLocaleString('en-NG', { minimumFractionDigits: 2 });
+
+                // Additions are positive, deductions are negative
+                const isPositive = ['deposit', 'investment', 'contribution', 'loan'].includes(tx.type.toLowerCase());
+                const prefix = isPositive ? '+' : '-';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            ${dateHtml}
+                            <div class="tx-type-label ${typeClass}">${tx.type}</div>
+                        </td>
+                        <td class="${typeClass}" style="text-transform: capitalize;">${tx.type}</td>
+                        <td class="${typeClass}" style="text-align: right; font-weight: 700;">${prefix}${amountFormatted}</td>
+                    </tr>
+                `;
+            });
+        }
+    </script>
+</body>
+
+</html>
