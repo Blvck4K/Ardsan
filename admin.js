@@ -1025,3 +1025,33 @@ window.resolveRefund = async function (refundId, userEmail) {
         alert(`Failed to resolve refund: ` + err.message);
     }
 };
+
+// ==============================
+// SEARCH FILTERING
+// ==============================
+window.filterTable = function (inputId, tbodyId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const filter = input.value.toLowerCase();
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const trs = tbody.getElementsByTagName('tr');
+
+    for (let i = 0; i < trs.length; i++) {
+        // Skip empty state rows
+        if (trs[i].getElementsByClassName('empty-state').length > 0) continue;
+
+        const tds = trs[i].getElementsByTagName('td');
+        let match = false;
+        for (let j = 0; j < tds.length; j++) {
+            if (tds[j]) {
+                const txtValue = tds[j].textContent || tds[j].innerText;
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    match = true;
+                    break;
+                }
+            }
+        }
+        trs[i].style.display = match ? '' : 'none';
+    }
+};

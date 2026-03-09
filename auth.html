@@ -24,9 +24,9 @@
 
       <form class="auth-form" id="signInForm">
         <div class="form-group">
-          <label for="signin-identifier">Username or Email</label>
-          <input type="text" id="signin-identifier" name="identifier" placeholder="Enter your username or email"
-            required>
+          <label for="signin-identifier">Username, Email, or Member ID</label>
+          <input type="text" id="signin-identifier" name="identifier"
+            placeholder="Enter your username, email, or member ID" required>
         </div>
         <div class="form-group" style="position: relative;">
           <label for="signin-password">Password</label>
@@ -178,16 +178,18 @@
           if (identifier.includes('@')) {
             result = await supabase.auth.signInWithPassword({ email: identifier, password });
           } else {
-            const { data, error } = await supabase
-              .from('users')
-              .select('email')
-              .eq('username', identifier)
-              .single();
-            if (error || !data) {
-              alert('No user found with that username.');
+            // Check username or member ID via secure RPC
+            const { data: userEmail, error } = await supabase.rpc('get_email_by_identifier', {
+              identifier: identifier
+            });
+
+            if (error || !userEmail) {
+              alert('No user found with that username or member ID.');
               return;
             }
-            result = await supabase.auth.signInWithPassword({ email: data.email, password });
+
+            // We found the email, proceed with login
+            result = await supabase.auth.signInWithPassword({ email: userEmail, password });
           }
           if (result.error) throw result.error;
           window.location.href = 'index.html';

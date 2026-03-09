@@ -220,7 +220,16 @@
 
         <!-- System Users Panel -->
         <div class="admin-section">
-            <h2>System Users</h2>
+            <h2>
+                <span>System Users</span>
+                <div style="display: flex; gap: 10px; font-size: 0.9em; font-weight: normal; align-items: center;">
+                    <input type="text" id="searchUsers" placeholder="Search users..."
+                        onkeyup="filterTable('searchUsers', 'usersTableBody')"
+                        style="padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 200px;">
+                    <button class="btn-add" onclick="filterTable('searchUsers', 'usersTableBody')"><i
+                            class="fa-solid fa-search"></i></button>
+                </div>
+            </h2>
             <div style="overflow-x: auto;">
                 <table class="data-table">
                     <thead>
@@ -244,7 +253,16 @@
 
         <!-- Bulk Contributions Management Panel -->
         <div class="admin-section">
-            <h2>Bulk Contributions Management</h2>
+            <h2>
+                <span>Bulk Contributions Management</span>
+                <div style="display: flex; gap: 10px; font-size: 0.9em; font-weight: normal; align-items: center;">
+                    <input type="text" id="searchContributions" placeholder="Search contributions..."
+                        onkeyup="filterTable('searchContributions', 'contributionsTableBody')"
+                        style="padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 200px;">
+                    <button class="btn-add" onclick="filterTable('searchContributions', 'contributionsTableBody')"><i
+                            class="fa-solid fa-search"></i></button>
+                </div>
+            </h2>
             <div style="overflow-x: auto;">
                 <table class="data-table">
                     <thead>
@@ -266,7 +284,16 @@
 
         <!-- Bulk Savings Management Panel -->
         <div class="admin-section">
-            <h2>Bulk Savings Management</h2>
+            <h2>
+                <span>Bulk Savings Management</span>
+                <div style="display: flex; gap: 10px; font-size: 0.9em; font-weight: normal; align-items: center;">
+                    <input type="text" id="searchSavings" placeholder="Search savings..."
+                        onkeyup="filterTable('searchSavings', 'savingsTableBody')"
+                        style="padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 200px;">
+                    <button class="btn-add" onclick="filterTable('searchSavings', 'savingsTableBody')"><i
+                            class="fa-solid fa-search"></i></button>
+                </div>
+            </h2>
             <div style="overflow-x: auto;">
                 <table class="data-table">
                     <thead>
@@ -288,7 +315,16 @@
 
         <!-- Deposit Requests Panel -->
         <div class="admin-section">
-            <h2>Deposit Requests</h2>
+            <h2>
+                <span>Deposit Requests</span>
+                <div style="display: flex; gap: 10px; font-size: 0.9em; font-weight: normal; align-items: center;">
+                    <input type="text" id="searchDeposits" placeholder="Search deposits..."
+                        onkeyup="filterTable('searchDeposits', 'depositRequestsTableBody')"
+                        style="padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 200px;">
+                    <button class="btn-add" onclick="filterTable('searchDeposits', 'depositRequestsTableBody')"><i
+                            class="fa-solid fa-search"></i></button>
+                </div>
+            </h2>
             <div style="overflow-x: auto;">
                 <table class="data-table">
                     <thead>
@@ -311,7 +347,16 @@
 
         <!-- Pending Loans Panel -->
         <div class="admin-section">
-            <h2>Pending Loans</h2>
+            <h2>
+                <span>Pending Loans</span>
+                <div style="display: flex; gap: 10px; font-size: 0.9em; font-weight: normal; align-items: center;">
+                    <input type="text" id="searchLoans" placeholder="Search pending loans..."
+                        onkeyup="filterTable('searchLoans', 'loansTableBody')"
+                        style="padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 200px;">
+                    <button class="btn-add" onclick="filterTable('searchLoans', 'loansTableBody')"><i
+                            class="fa-solid fa-search"></i></button>
+                </div>
+            </h2>
             <div style="overflow-x: auto;">
                 <table class="data-table">
                     <thead>
@@ -334,8 +379,20 @@
 
         <!-- Active Loans Panel -->
         <div class="admin-section">
-            <h2>Active Loans <button class="btn-add" onclick="processMonthlyLoans()"><i class="fa-solid fa-sync"></i>
-                    Process Monthly Deductions</button></h2>
+            <h2>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span>Active Loans</span>
+                    <button class="btn-add" onclick="processMonthlyLoans()"><i class="fa-solid fa-sync"></i> Process
+                        Monthly Deductions</button>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 0.9em; font-weight: normal; align-items: center;">
+                    <input type="text" id="searchActiveLoans" placeholder="Search active loans..."
+                        onkeyup="filterTable('searchActiveLoans', 'activeLoansTableBody')"
+                        style="padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 200px;">
+                    <button class="btn-add" onclick="filterTable('searchActiveLoans', 'activeLoansTableBody')"><i
+                            class="fa-solid fa-search"></i></button>
+                </div>
+            </h2>
             <div style="overflow-x: auto;">
                 <table class="data-table">
                     <thead>
@@ -357,8 +414,19 @@
         </div>
         <!-- Shop Management Panel -->
         <div class="admin-section">
-            <h2>Shop Management <button class="btn-add" onclick="openShopModal()"><i class="fa-solid fa-plus"></i> Add
-                    Item</button></h2>
+            <h2>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span>Shop Management</span>
+                    <button class="btn-add" onclick="openShopModal()"><i class="fa-solid fa-plus"></i> Add Item</button>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 0.9em; font-weight: normal; align-items: center;">
+                    <input type="text" id="searchShop" placeholder="Search shop items..."
+                        onkeyup="filterTable('searchShop', 'shopItemsTableBody')"
+                        style="padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 200px;">
+                    <button class="btn-add" onclick="filterTable('searchShop', 'shopItemsTableBody')"><i
+                            class="fa-solid fa-search"></i></button>
+                </div>
+            </h2>
             <div style="overflow-x: auto;">
                 <table class="data-table">
                     <thead>
@@ -382,7 +450,16 @@
         <div class="admin-section">
             <div
                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; flex-wrap: wrap;">
-                <h2 style="margin: 0;">IPPIS Records</h2>
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; flex: 1;">
+                    <span>IPPIS Records</span>
+                    <div style="display: flex; gap: 10px; font-size: 0.9em; font-weight: normal; align-items: center;">
+                        <input type="text" id="searchIppis" placeholder="Search IPPIS..."
+                            onkeyup="filterTable('searchIppis', 'ippisRecordsTableBodyAdmin')"
+                            style="padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 200px;">
+                        <button class="btn-add" onclick="filterTable('searchIppis', 'ippisRecordsTableBodyAdmin')"><i
+                                class="fa-solid fa-search"></i></button>
+                    </div>
+                </h2>
                 <button id="exportIppisBtnAdmin"
                     style="padding: 8px 15px; background-color: #28a745; color: white; border-radius: 8px; font-weight: bold; border: none; cursor: pointer;">
                     Export IPPIS CSV
@@ -410,7 +487,16 @@
 
         <!-- Refund Requests Panel -->
         <div class="admin-section">
-            <h2>Refund Requests</h2>
+            <h2>
+                <span>Refund Requests</span>
+                <div style="display: flex; gap: 10px; font-size: 0.9em; font-weight: normal; align-items: center;">
+                    <input type="text" id="searchRefunds" placeholder="Search refunds..."
+                        onkeyup="filterTable('searchRefunds', 'refundsTableBody')"
+                        style="padding: 6px; border-radius: 4px; border: 1px solid #ccc; width: 200px;">
+                    <button class="btn-add" onclick="filterTable('searchRefunds', 'refundsTableBody')"><i
+                            class="fa-solid fa-search"></i></button>
+                </div>
+            </h2>
             <div style="overflow-x: auto;">
                 <table class="data-table">
                     <thead>
